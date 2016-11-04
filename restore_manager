@@ -1,0 +1,72 @@
+#!/bin/sh
+# chkconfig: 345 99 10
+# description: Start/Stop the Restore Manager script.
+#
+
+RESTORE_MANAGER="/u00/scripts/oracle/restore/restore_manager.sh"
+CONFIG_FILE="/u00/scripts/oracle/restore/databases.ini"
+SU=`which su`
+
+prog=`basename ${RESTORE_MANAGER}`
+
+
+log (){
+ if [ "$2." == "0." ]; then
+   echo -ne "$1\t[ \e[40;32mOK\e[40;37m ]\n" | expand -t 70
+ elif [ "$2." == "1." ]; then
+   echo -ne "$1\t[ \e[40;31mNOK\e[40;37m ]\n" | expand -t 70
+   exit 1
+ else
+     echo -ne "$1"
+ fi
+}
+
+start(){
+ log "Starting the restore manager...\n"
+ RUN=`status`
+ if [[ "${RUN}." =~ "NOK" ]] 
+  then 
+    ( ${SU} - oracle -c "${RESTORE_MANAGER} --config-file ${CONFIG_FILE} > /dev/null 2>&1" & )
+    log "Script started" 0
+  else
+    log "Script already running..." 1
+ fi
+}
+
+status(){
+ PID="`ps -ef | grep ${prog} | grep -v grep | head -1 | awk '{ print $2}'`"
+ if [ ${PID} ] 
+  then 
+    log "${prog} (pid  ${PID}) is running..." 0 
+    return 0 
+  else
+    log "${prog} is stopped." 1 
+    return 1
+ fi
+}
+
+stop(){
+ log "Stopping the restore manager, please wait...\n"
+ PID=`ps -ef | grep ${prog} | grep -v grep | awk '{ print $2}' | xargs`
+ kill ${PID} > /dev/null 2>&1 ; sleep 1.5
+ status
+}
+
+case "$1" in
+    'start')
+       start 
+       ;;
+    'stop')
+       stop 
+       ;;
+    'status')
+       status
+       ;;
+    'restart')
+       stop 
+       start
+       ;;
+     *)
+	echo $"Usage: $0 {start|stop|status|restart}"
+	exit 2
+esac
