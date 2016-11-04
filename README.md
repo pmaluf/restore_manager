@@ -40,6 +40,25 @@ Example:
 bash restore_manager.sh --config-file databases.ini
 ```
 
+## Enable the init script
+
+* Copy the script restore_manager to /etc/init.d/
+```
+$ cp restore_manager /etc/init.d/ && chmod +x /etc/init.d/restore_manager
+```
+
+* Setup the variables RESTORE_MANAGER and CONFIG_FILE with the restore_manager.sh and databases.ini path
+```
+$ vi /etc/init.d/restore_manager
+RESTORE_MANAGER="/u00/scripts/oracle/restore/restore_manager.sh"
+CONFIG_FILE="/u00/scripts/oracle/restore/databases.ini"
+```
+
+* Enable it with chkconfig
+```
+$ chkconfig restore_manager on
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [License.md](License.md) file for details
