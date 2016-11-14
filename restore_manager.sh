@@ -192,9 +192,20 @@ startup_nomount(){
 }
 
 send_email(){
-mail -s "[RESTORE][ORACLE] - ${SID}" ${MAIL_LST} <<EOF
-${1}
+
+MSG_BODY=`tail -15 ${LAST} | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g"`
+
+if [[ ${MSG_BODY} =~ (NOK) ]]
+ then 
+   MSG_TITLE="[RESTORE][ORACLE] ${SID} NOK" 
+ else
+   MSG_TITLE="[RESTORE][ORACLE] ${SID} OK"
+fi
+
+mail -s "${MSG_TITLE}" -r root@mydomain.com "${MAIL_LST}" <<EOF
+${MSG_BODY}
 EOF
+
 }
 
 help(){
@@ -248,6 +259,7 @@ do
       restore_database
       restore_archive
       shutdown
+      send_email
     done
   fi
 done
